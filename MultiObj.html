@@ -75,13 +75,14 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 	var target = [cameraPosition[0], cameraPosition[1], cameraPosition[2]-1];
 	var up = [0, 100, 0];
 	var cameraMatrix = [];
+	var orthoscale = 1;
 	
 	var viewTypes = {'Orthographic':0,'Perspective':1};
 	var view = viewTypes['Perspective'];
 		
 	function degToRad(d){
-	    return d * Math.PI / 180;
 
+	    return d * Math.PI / 180;
 	}
 
 	function vecAdd(v1,v2){
@@ -535,20 +536,18 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 
 			var normDir = normalize(dir);
 
-			//console.log(target,dir,normDir);
-
-			console.log(e.which);
-
 			if (e.which >= '1'.charCodeAt(0) && e.which <= '9'.charCodeAt(0)){
 				objects[e.which-48].toggle();
 			}
 			else if (e.which == 'W'.charCodeAt(0)){ // Forward
 				cameraPosition = vecAdd(cameraPosition,normDir);
 				target = vecAdd(target,normDir);
+				orthoscale *= .99; 
 			}
 			else if (e.which == 'S'.charCodeAt(0)){ // Back
 				cameraPosition = vecAdd(cameraPosition,mult(normDir,-1));
 				target = vecAdd(target,mult(normDir,-1));
+				orthoscale *= 1.01; 
 			}
 			else if (e.which == 'A'.charCodeAt(0)){ // left
 				var newDir = rotateY(normDir,-0.2);
@@ -570,7 +569,6 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 				var dirInCamerCoor = normalize(vecMatProduct(normDir,cameraMatrix));
 				var newDirInCamerCoor = normalize(rotateX([dirInCamerCoor[0],dirInCamerCoor[1],dirInCamerCoor[2]],0.2));
 				var newDir = normalize(vecMatProduct(newDirInCamerCoor,m4.inverse(cameraMatrix)));
-				console.log(newDir[1]);
 				if(newDir[1]>-0.8){
 					target = vecAdd(cameraPosition,newDir);
 				}
@@ -581,7 +579,7 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 			else if (e.which == 'G'.charCodeAt(0)){
 			}
 			else if (e.which == 'O'.charCodeAt(0)){
-				console.log('ortho');
+				console.log('Orthographic');
 				view = viewTypes['Orthographic'];
 			}
 			else if (e.which == 'P'.charCodeAt(0)){
@@ -591,6 +589,7 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 		};
 
 		var getProjectionMatrix = function(gl){
+
 			return view == viewTypes['Orthographic']? setViewOrtho(gl):setViewPerspective(gl);
 		}
 
@@ -599,11 +598,13 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 			var far = 10000;
 			var radius = 1.0;
 
-			var target_width = 120.0;
-			var target_height = 200.0;
+			var target_width = 120.0 * orthoscale;
+			var target_height = 200.0 * orthoscale;
 
 			var A = target_width / target_height; // target aspect ratio 
 			var V = gl.canvas.clientWidth / gl.canvas.clientHeight;
+
+
 			var mat = [];
 
 			// calculate V as above
