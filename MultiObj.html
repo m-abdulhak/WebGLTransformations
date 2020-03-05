@@ -53,14 +53,7 @@ void main() {
 <script type="text/javascript">
 	"use strict";
 
-	const red = [1, 0, 0, 1];
-	const green = [0, 1, 0, 1];
-	const blue = [0.3, 0.3, 1, 1];
-	const yellow = [1, 1, 0, 1];
-	const magneta = [1, 0, 1, 1];
-	const black = [0.1, 0.3, 0.2, .3];
-
-	var objects = [];
+	var scene;
 
 	var cameraPosition = [0, 0, 70];
 	var target = [cameraPosition[0], cameraPosition[1], cameraPosition[2]-1];
@@ -151,175 +144,129 @@ void main() {
 					];
 	}
 
-	var createPlane = function(gl,programInfo,location) {
-		var position = location;
-		position[0] = 50;
-		position[2] = 20;
-		var orientation=[0,0,0];
-		var size=[8.5,8.5,.1];
-		var speed=[0,0,0];
-		var orientationChangeRate=[0,0,0];
-		var sizeChangeRate=[1,1,1];
-		var worldSize=[100,140,180];
-		var scaleLimit=[10,10,10];
+	class ShapeFactory {
+		constructor (gl,programInfo,sceneSize){
+			this.gl = gl;
+			this.programInfo = programInfo;
+			this.DefShapeSettings = {
+				position : [sceneSize[0]/2,sceneSize[1]/2,0],
+				orientation : [0,0,0],
+				size : [1,1,1],
+				speed : [0,0,0],
+				angularSpeed : [0,0,0],
+				sizeChangeRate : [1,1,1],
+				sceneSize : sceneSize,
+				scaleLimit: [2,2,2]};
+			this.Shapes = {
+				"Plane" : primitives.createCubeVertices(20),
+				"Sphere" : primitives.createSphereVertices(10, 10, 10),
+				"Cube" : primitives.createCubeVertices(20),
+				"Pyramid" : primitives.createTruncatedConeVertices(10, 0, 20, 3, 1, true, true),
+				"Cylinder" : primitives.createTruncatedConeVertices(10, 10, 20, 20, 1, true, true),
+				"Cone" : primitives.createTruncatedConeVertices(10, 0, 20, 20, 1, true, true)};
+			this.Colors = {
+				"Red" : [1, 0, 0, 1],
+				"Green" : [0, 1, 0, 1],
+				"Blue" : [0.3, 0.3, 1, 1],
+				"Yellow" : [1, 1, 0, 1],
+				"Magneta" : [1, 0, 1, 1],
+				"Black" : [0, 0, 0, .3]};
+			this.DefaultColor = this.Colors.Red;
+		}
 
-		return new WebGlObject(gl,
-			programInfo,
-			primitives.createCubeVertices(20),
-			black,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
+		getDefaultsWith(parObject){
+			var settings = {...this.DefShapeSettings};
+			
+			for (var k in parObject) {
+				if (parObject.hasOwnProperty(k)) {
+					settings[k] = parObject[k];
+				}
+			}
 
-	var createCube = function(gl,programInfo,location) {
-		var position = location;
-		var orientation=[0,0,0];
-		var size=[1,1,1];
-		var speed=[0,0,0];
-		var orientationChangeRate=[1,1,0];
-		var sizeChangeRate=[1,1,1];
-		var worldSize=[100,140,80];
-		var scaleLimit=[10,10,10];
-
-		return new WebGlObject(gl,
-			programInfo,
-			primitives.createCubeVertices(20),
-			red,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
-
-	var createPyramid = function(gl,programInfo,location) {
-		// TODO: Translation?
-		var position = location;
-		var orientation=[0,0,0];
-		var size=[1,1,1];
-		var speed=[0,0,0];
-		var orientationChangeRate=[0,0,0];
-		var sizeChangeRate=[1,1,1];
-		var worldSize=[100,140,80];
-		var scaleLimit=[2,2,2];
-
-		return new WebGlObject(gl, 
-			programInfo,
-			primitives.createTruncatedConeVertices(10, 0, 20, 3, 1, true, true),
-			yellow,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
-
-	var createCylinder = function(gl,programInfo,location) {
-		var position = location;
-		var orientation=[0,0,0];
-		var size=[1,1,1];
-		var speed=[0,0,0];
-		var orientationChangeRate=[0,0,0];
-		var sizeChangeRate=[1.001,1.001,1.001];
-		var worldSize=[100,140,80];
-		var scaleLimit=[2,2,2];
-
-		return new WebGlObject(gl, 
-			programInfo,
-			primitives.createTruncatedConeVertices(10, 10, 20, 20, 1, true, true),
-			blue,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
-
-	var createCone = function(gl,programInfo,location) {
-		var position = location;
-		var orientation=[0,0,0];
-		var size=[1,1,1];
-		var speed=[0,0,0];
-		var orientationChangeRate=[0,0,0];
-		var sizeChangeRate=[1.001,1.002,1.003];
-		var worldSize=[100,140,80];
-		var scaleLimit=[2,2,2];
-
-		return new WebGlObject(gl, 
-			programInfo,
-			primitives.createTruncatedConeVertices(10, 0, 20, 20, 1, true, true),
-			magneta,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
-
-	var createSphere = function(gl,programInfo,location) {
-		var position = location;
-		var orientation=[0,0,0];
-		var size=[1,1,1];
-		var speed=[10,0,0];
-		var orientationChangeRate=[0,0,0];
-		var sizeChangeRate=[1,1,1];
-		var worldSize=[100,140,80];
-		var scaleLimit=[10,10,10];
-
-		return new WebGlObject(gl,
-			programInfo,
-			primitives.createSphereVertices(10, 10, 10),
-			green,
-			position,
-			orientation,
-			size,
-			speed,
-			orientationChangeRate,
-			sizeChangeRate,
-			worldSize,
-			scaleLimit);
-	}
-
-	var createObjects = function(gl,programInfo){
-		const locCenter = [0,70,0];
-		const locTopRight = [80,110,0];
-		const locTopLeft = [20,110,0];
-		const locBotRight = [80,30,0];
-		const locBotLeft = [20,30,0];
-
-		var plane = createPlane(gl,programInfo,locCenter);
-
-		var cube = createCube(gl,programInfo,locTopLeft);
-
-		var pyramid = createPyramid(gl,programInfo,locTopRight);
-
-		var cylinder = createCylinder(gl,programInfo,locBotLeft);
-
-		var cone = createCone(gl,programInfo,locBotRight);
-
-		var sphere = createSphere(gl,programInfo,locCenter);
-
-		var obj  = [plane, cube, pyramid, cylinder, cone, sphere];
+			return settings;
+		}
 		
-		return obj;
+		createShape = function(shape, location, color, parameters) {
+			const settings = parameters == null? this.DefShapeSettings : parameters;
+			const col = color == null? this.defaultColor : color;
+			const loc = location;
+
+			return new WebGlObject(
+				this.gl,
+				this.programInfo,
+				shape,
+				col,
+				loc,
+				settings.orientation,
+				settings.size,
+				settings.speed,
+				settings.angularSpeed,
+				settings.sizeChangeRate,
+				settings.sceneSize,
+				settings.scaleLimit);
+		}
+	}
+
+	class Scene{
+		constructor(gl,programInfo,sceneSize){
+			this.gl = gl;
+			this.programInfo = programInfo;
+			this.sceneSize = sceneSize;
+			this.ShapeFactory = new ShapeFactory(gl,programInfo,sceneSize);
+			this.Positions = {
+				"Center" : [2.5,2.5,0],
+				"TopLeft" : [1,4,0],
+				"TopRight" : [4,4,0],
+				"BottomLeft" : [1,1,0],
+				"BottomRight" : [4,1,0]};
+			this.objects = [];
+		}
+
+		getPosition(position){
+			const stepSize = [this.sceneSize[0]/5,this.sceneSize[1]/5,this.sceneSize[2]/5];
+			return [position[0]*stepSize[0],position[1]*stepSize[1],position[2]*stepSize[2]];
+		}
+
+		createObjects (){
+			var sF = this.ShapeFactory;
+
+			var position = this.getPosition(this.Positions.Center);
+			position[2]=-15;
+			var parameters = sF.getDefaultsWith({"size":[8.5,8.5,.01],scaleLimit: [100,100,100]});
+			this.objects.push(sF.createShape(sF.Shapes.Plane,position,sF.Colors.Black,parameters));
+
+			position = this.getPosition(this.Positions.TopLeft);
+			parameters = sF.getDefaultsWith({"angularSpeed":[1,1,0]});
+			this.objects.push(sF.createShape(sF.Shapes.Cube,position,sF.Colors.Red,parameters));
+			
+			position = this.getPosition(this.Positions.TopRight);
+			parameters = sF.getDefaultsWith({"speed":[1,1,1],"angularSpeed":[-1,-1,-1],"sizeChangeRate":[1.1,1.005,1.005],scaleLimit:[2,2,2],"worldSize":[1,1,1]});
+			this.objects.push(sF.createShape(sF.Shapes.Pyramid,position,sF.Colors.Yellow,parameters));
+
+			position = this.getPosition(this.Positions.Center);
+			parameters = sF.getDefaultsWith({"speed":[10,0,0]});
+			this.objects.push(sF.createShape(sF.Shapes.Sphere,position,sF.Colors.Green,parameters));
+
+			position = this.getPosition(this.Positions.BottomLeft);
+			parameters = sF.getDefaultsWith({"sizeChangeRate":[1.001,1.001,1.001]});
+			this.objects.push(sF.createShape(sF.Shapes.Cylinder,position,sF.Colors.Blue,parameters));
+
+			position = this.getPosition(this.Positions.BottomRight);
+			parameters = sF.getDefaultsWith({"sizeChangeRate":[1.001,1.002,1.003]});
+			this.objects.push(sF.createShape(sF.Shapes.Cone,position,sF.Colors.Magneta,parameters));
+		}
+
+		render(time,viewProjectionMatrix){
+			var t = time /1000;
+			for(const o of this.objects){
+				o.update(time);
+				o.draw(viewProjectionMatrix,t);
+			}
+		}
+
+		toggleAnimation(objIndex){
+			this.objects[objIndex].toggleAnimation();
+		}			
 	}
 
 	class WebGlObject {
@@ -460,7 +407,7 @@ void main() {
 			return matrix;
 		}
 
-		toggle(){
+		toggleAnimation(){
 			this.enabled = !this.enabled;
 		}
 	}
@@ -477,7 +424,9 @@ void main() {
 		// setup GLSL program
 		var programInfo = webglUtils.createProgramInfo(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
 
-		objects = createObjects(gl,programInfo);
+		//objects = createObjects(gl,programInfo);
+		scene = new Scene(gl,programInfo,[100,140,80]);
+		scene.createObjects();
 
 		requestAnimationFrame(render);
 
@@ -508,10 +457,7 @@ void main() {
 			var viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 
 			// ------ Draw Objects --------
-			for(const o of objects){
-				o.update(time);
-				o.draw(viewProjectionMatrix,t);
-			}
+			scene.render(time,viewProjectionMatrix);
 
 			requestAnimationFrame(render);
 		}
@@ -525,7 +471,7 @@ void main() {
 			var normDir = normalize(dir);
 
 			if (e.which >= '1'.charCodeAt(0) && e.which <= '9'.charCodeAt(0)){
-				objects[e.which-48].toggle();
+				scene.toggleAnimation(e.which-48);
 			}
 			else if (e.which == 'W'.charCodeAt(0)){ // Forward
 				cameraPosition = vecAdd(cameraPosition,normDir);
@@ -577,7 +523,6 @@ void main() {
 		};
 
 		var getProjectionMatrix = function(gl){
-
 			return view == viewTypes['Orthographic']? setViewOrtho(gl):setViewPerspective(gl);
 		}
 
