@@ -23,11 +23,14 @@
 			font-size:1.5em;
 			text-align: center;
 			overflow: scroll;
-			line-height: 1.5em;
+			line-height: 1.4em;
 		}
 		.key{
 			color: #34a21a;
 			font-weight: 700;
+		}
+		.active{
+			font-weight: 900;
 		}
 	</style>
 </head>
@@ -57,7 +60,7 @@
 	<br>
 	<span class="key">O - P</span> 
 	<br>
-	<span class="action">Orthographic / Perspective</span>
+	<span class="action"><span id="ortho">Orthographic</span> / <span id="perspective" class="active">Perspective</span> </span>
 	<br>
 	<br>
 	<span class="key">X</span> 
@@ -66,6 +69,8 @@
 	<br>
 	<br>
 	<span style="font-size: 0.6em;">Made By <a href="mailto:m_abdulhak@outlook.com">Mohammed Abdullhak</a></span>
+	<br>
+	<span style="font-size: 0.6em;"><a href="https://github.com/m-abdulhak/WebGLTransformations">Source Code</a></span>
 </div>
 
 <!-- vertex shader -->
@@ -578,7 +583,21 @@ void main() {
 		};
 
 		var getProjectionMatrix = function(gl){
-			return view == viewTypes['Orthographic']? setViewOrtho(gl):setViewPerspective(gl);
+			var ret = setViewPerspective(gl);
+			var elPers = document.getElementById("perspective") ;
+			var elOrtho = document.getElementById("ortho") ;
+
+			if(view == viewTypes['Perspective']){
+				ret = setViewPerspective(gl);
+				elPers.classList.add("active");
+				elOrtho.classList.remove("active");
+			}else{
+				ret = setViewOrtho(gl);
+				elPers.classList.remove("active");
+				elOrtho.classList.add("active");
+			}
+
+			return ret;
 		}
 
 		var setViewOrtho = function (gl) {
